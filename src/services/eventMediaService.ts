@@ -33,20 +33,20 @@ export const eventMediaService = {
 
   async listMedia(eventId: string): Promise<EventMedia> {
     if (!supabase) return { logoUrl: null, photoUrls: [] };
+    const client = supabase;
     // Logo URL (public)
-    const { data: { publicUrl: logoUrl } } = supabase.storage.from(BUCKET).getPublicUrl(`${eventId}/logo.png`);
+    const { data: { publicUrl: logoUrl } } = client.storage.from(BUCKET).getPublicUrl(`${eventId}/logo.png`);
 
     // Photos list
-    const { data: files, error } = await supabase.storage
+    const { data: files, error } = await client.storage
       .from(BUCKET)
       .list(`${eventId}/photos`, { limit: 100, sortBy: { column: 'created_at', order: 'desc' } });
     if (error) return { logoUrl, photoUrls: [] };
 
     const photoUrls = (files || [])
       .filter((f) => !!f.name)
-      .map((f) => supabase.storage.from(BUCKET).getPublicUrl(`${eventId}/photos/${f.name}`).data.publicUrl);
+      .map((f) => client.storage.from(BUCKET).getPublicUrl(`${eventId}/photos/${f.name}`).data.publicUrl);
 
     return { logoUrl, photoUrls };
   }
 };
-
