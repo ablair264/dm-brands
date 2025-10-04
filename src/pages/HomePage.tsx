@@ -78,6 +78,16 @@ const HomePage: React.FC = () => {
     }
   ];
 
+  // Recent event gallery (drop images into public/images/events/three-counties-autumn-2025)
+  const pastEventImages: string[] = [
+    '/images/events/three-counties-autumn-2025/01.jpg',
+    '/images/events/three-counties-autumn-2025/02.jpg',
+    '/images/events/three-counties-autumn-2025/03.jpg',
+    '/images/events/three-counties-autumn-2025/04.jpg',
+    '/images/events/three-counties-autumn-2025/05.jpg',
+    '/images/events/three-counties-autumn-2025/06.jpg',
+  ];
+
   return (
     <div className="homepage">
       {/* Hero Section with Image Accordion */}
@@ -138,6 +148,49 @@ const HomePage: React.FC = () => {
               <ArrowRight size={20} />
             </Link>
           </motion.div>
+        </div>
+      </section>
+
+      {/* Featured Brands Grid */}
+      <section className="brands-section">
+        <div className="container">
+          <div className="section-header">
+            <h2>Featured Brands</h2>
+            <p>Design-led collections across home, kitchen, gifts and wellbeing</p>
+          </div>
+          <div className="brands-grid">
+            {brands.map((brand) => (
+              <div key={brand.id} className="brand-card" style={{ ['--brand-color' as any]: brand.color }}>
+                <div className="brand-media" style={{ backgroundImage: `url(${brand.image})` }} />
+                <div className="brand-info">
+                  <h3>{brand.name}</h3>
+                  <p>{brand.description}</p>
+                  <div className="brand-actions">
+                    <button className="btn-secondary" onClick={() => setSelectedBrand(brand)}>View</button>
+                    <a className="btn-link" href={brand.website} target="_blank" rel="noreferrer">Website →</a>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Past Events Gallery */}
+      <section className="events-section">
+        <div className="container">
+          <div className="section-header">
+            <h2>Recent Events</h2>
+            <p>3 Counties Autumn Show — highlights from our stand</p>
+          </div>
+          <div className="events-grid">
+            {pastEventImages.map((src, i) => (
+              <div key={i} className="event-tile">
+                <div className="event-media" style={{ backgroundImage: `url(${src})` }} />
+              </div>
+            ))}
+          </div>
+          <div className="events-note">Have more photos? Drop them into <code>public/images/events/three-counties-autumn-2025</code> using the 01.jpg, 02.jpg pattern.</div>
         </div>
       </section>
 

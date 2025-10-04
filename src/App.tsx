@@ -10,7 +10,7 @@ import AboutPage from './pages/AboutPage';
 import CataloguesPage from './pages/CataloguesPage';
 import LoginPage from './pages/LoginPage';
 import AdminDashboard from './admin/AdminDashboard';
-// import ImageBankAuthPage from './pages/ImageBankAuthPage';
+import ImageBankAuthPage from './pages/ImageBankAuthPage';
 import CustomerImageBank from './pages/CustomerImageBank';
 import './styles/globals.css';
 
@@ -23,8 +23,10 @@ function App() {
             {/* Login route without header */}
             <Route path="/login" element={<LoginPage />} />
             
-            {/* Back-compat: Image Bank Auth route redirects to /login */}
-            <Route path="/image-bank-auth" element={<LoginPage />} />
+            {/* Back-compat: old image bank auth route */}
+            <Route path="/image-bank-auth" element={<ImageBankAuthPage />} />
+            {/* Customer signup route */}
+            <Route path="/signup" element={<ImageBankAuthPage />} />
             
             {/* Protected Image Bank route without header (admin or customer) */}
             <Route

@@ -58,8 +58,8 @@ const LoginPage: React.FC = () => {
             <div className="login-logo">
               <Lock size={32} />
             </div>
-            <h1>Admin Login</h1>
-            <p>Enter your credentials to access the admin dashboard</p>
+            <h1>Sign In</h1>
+            <p>Sign in to access DM Brands tools and the Image Bank</p>
           </div>
 
           <form onSubmit={handleSubmit} className="login-form">
@@ -79,7 +79,7 @@ const LoginPage: React.FC = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@dmbrands.co.uk"
+                placeholder="you@example.com"
                 required
                 autoFocus
               />
@@ -133,15 +133,14 @@ const LoginPage: React.FC = () => {
             >
               ← Back to website
             </button>
+            <button
+              onClick={() => navigate('/signup')}
+              className="back-link"
+            >
+              Create a customer account →
+            </button>
           </div>
-
-          <div className="login-info">
-            <p className="demo-credentials">
-              <strong>Demo Credentials:</strong><br />
-              Email: admin@dmbrands.co.uk<br />
-              Password: DMBrands2025!
-            </p>
-          </div>
+          
         </div>
       </div>
     </div>

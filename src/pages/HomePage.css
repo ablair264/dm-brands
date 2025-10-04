@@ -166,6 +166,118 @@
   color: white;
 }
 
+/* Sections */
+.brands-section, .events-section {
+  padding: var(--spacing-4xl) 0;
+  background: #fff;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: var(--spacing-2xl);
+}
+
+.section-header h2 {
+  font-size: 2rem;
+  color: var(--accent-2);
+  margin-bottom: var(--spacing-sm);
+}
+
+.section-header p {
+  color: var(--primary-color);
+}
+
+/* Brands grid */
+.brands-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-xl);
+}
+
+.brand-card {
+  display: grid;
+  grid-template-rows: 180px auto;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  background: #faf9fb;
+  border: 1px solid rgba(0,0,0,0.04);
+}
+
+.brand-media {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.brand-info {
+  padding: var(--spacing-lg);
+}
+
+.brand-info h3 {
+  margin: 0 0 var(--spacing-sm) 0;
+  color: var(--accent-2);
+}
+
+.brand-info p {
+  color: var(--primary-color);
+  line-height: 1.6;
+  max-height: 4.8em; /* ~3 lines */
+  overflow: hidden;
+}
+
+.brand-actions {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-md);
+  align-items: center;
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid var(--accent-1);
+  color: var(--accent-1);
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.btn-secondary:hover { opacity: 0.85; }
+
+.btn-link {
+  color: var(--accent-1);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+/* Events grid */
+.events-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-xl);
+}
+
+.event-tile {
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  background: #f3f1f4;
+}
+
+.event-media {
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+}
+
+.events-note {
+  text-align: center;
+  color: var(--primary-color);
+  margin-top: var(--spacing-xl);
+}
+
 /* Mobile Styles */
 @media (max-width: 1024px) {
   .image-accordion {
@@ -227,6 +339,10 @@
     font-size: 1rem;
     padding: var(--spacing-md) var(--spacing-xl);
   }
+
+  .brands-grid, .events-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 480px) {
@@ -257,6 +373,11 @@
 
   .catalogues-cta {
     padding: var(--spacing-2xl) 0;
+  }
+
+  .brands-grid, .events-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-lg);
   }
 }
 
