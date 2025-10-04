@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Lock, Mail, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import './LoginPage.css';
@@ -12,17 +12,17 @@ const LoginPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   
   const navigate = useNavigate();
-  const location = useLocation();
-  const { signIn, user, isAdmin } = useAuth();
+  const { loginAny, user, isAdmin, role } = useAuth();
 
-  const from = (location.state as any)?.from?.pathname || '/admin';
+  // Derive redirect dynamically after successful login
 
   useEffect(() => {
-    // If already logged in, redirect to admin
-    if (user && isAdmin) {
-      navigate(from, { replace: true });
+    // If already logged in, redirect based on role
+    if (user) {
+      if (isAdmin) navigate('/admin', { replace: true });
+      else if (role === 'customer') navigate('/image-bank', { replace: true });
     }
-  }, [user, isAdmin, navigate, from]);
+  }, [user, isAdmin, role, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,12 +30,13 @@ const LoginPage: React.FC = () => {
     setLoading(true);
 
     try {
-      const result = await signIn(email, password);
-      
-      if (result.error) {
-        setError(result.error);
+      const result = await loginAny(email, password);
+      if (!result.success) {
+        setError(result.error || 'Invalid email or password');
       } else {
-        navigate(from, { replace: true });
+        // Route by role
+        if (result.role === 'admin') navigate('/admin', { replace: true });
+        else navigate('/image-bank', { replace: true });
       }
     } catch (err) {
       setError('An unexpected error occurred');

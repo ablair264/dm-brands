@@ -4,10 +4,11 @@ import { useAuth } from '../contexts/AuthContext';
 
 interface PrivateRouteProps {
   children: React.ReactNode;
+  requireRole?: 'admin' | 'customer';
 }
 
-const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
-  const { user, isAdmin, loading } = useAuth();
+const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, requireRole }) => {
+  const { user, isAdmin, role, loading } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -19,10 +20,10 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
     );
   }
 
-  if (!user || !isAdmin) {
-    // Redirect to login page but save the location they were trying to go to
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
+  // Role-based checks
+  if (!user) return <Navigate to="/login" state={{ from: location }} replace />;
+  if (requireRole === 'admin' && !isAdmin) return <Navigate to="/login" state={{ from: location }} replace />;
+  if (requireRole === 'customer' && role !== 'customer') return <Navigate to="/login" state={{ from: location }} replace />;
 
   return <>{children}</>;
 };

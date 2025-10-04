@@ -20,6 +20,8 @@ interface AuthContextType {
   signup: (email: string, password: string, displayName: string, company: string) => Promise<{ success: boolean; needsApproval?: boolean }>;
   logout: () => Promise<void>;
   isAdmin: boolean;
+  role: 'admin' | 'customer' | null;
+  loginAny: (email: string, password: string) => Promise<{ success: boolean; role?: 'admin' | 'customer'; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -32,6 +34,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [role, setRole] = useState<'admin' | 'customer' | null>(null);
 
   useEffect(() => {
     checkUser();
@@ -45,6 +48,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const authData = JSON.parse(storedAuth);
         setUser(authData.user);
         setIsAdmin(authData.user.isAdmin || false);
+        setRole(authData.user.isAdmin ? 'admin' : 'customer');
         setLoading(false);
         return;
       }
@@ -59,6 +63,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             isAdmin: true
           });
           setIsAdmin(true);
+          setRole('admin');
           setLoading(false);
           return;
         }
@@ -78,6 +83,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         setUser(userData);
         setIsAdmin(false);
+        setRole('customer');
         setLoading(false);
         return;
       }
@@ -107,6 +113,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             };
             setUser(userData);
             setIsAdmin(true);
+            setRole('admin');
             // Persist admin session hint so refresh keeps admin role even if Supabase check lags
             localStorage.setItem('dm-brands-auth', JSON.stringify({
               user: userData,
@@ -129,6 +136,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const userData = { email, isAdmin: true };
         setUser(userData);
         setIsAdmin(true);
+        setRole('admin');
         
         // Store in localStorage
         localStorage.setItem('dm-brands-auth', JSON.stringify({
@@ -182,6 +190,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         setUser(userData);
         setIsAdmin(false);
+        setRole('customer');
         
         console.log('✅ Customer login successful');
         return true;
@@ -225,9 +234,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await customerAuthService.signOut();
       setUser(null);
       setIsAdmin(false);
+      setRole(null);
       console.log('✅ Customer logout successful');
     } catch (error) {
       console.error('❌ Logout error:', error);
+    }
+  };
+
+  // Unified login that tries admin first, then customer
+  const loginAny = async (email: string, password: string): Promise<{ success: boolean; role?: 'admin' | 'customer'; error?: string }> => {
+    // Try admin (DM Brands Supabase)
+    const adminAttempt = await signIn(email, password);
+    if (!adminAttempt.error) {
+      return { success: true, role: 'admin' };
+    }
+    // If not admin credentials, try customer (Splitfin Supabase)
+    try {
+      const result = await customerAuthService.signIn(email, password);
+      if (result.success && result.user) {
+        const userData = {
+          email: result.user.email,
+          id: result.user.id,
+          displayName: result.user.name,
+          company: result.user.customer?.trading_name || result.user.customer?.display_name,
+          isAdmin: false,
+          customerUser: result.user
+        };
+        setUser(userData);
+        setIsAdmin(false);
+        setRole('customer');
+        return { success: true, role: 'customer' };
+      }
+      return { success: false, error: result.error || 'Invalid credentials' };
+    } catch (err: any) {
+      return { success: false, error: err?.message || 'Login failed' };
     }
   };
 
@@ -240,7 +280,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       login, 
       signup, 
       logout, 
-      isAdmin 
+      isAdmin,
+      role,
+      loginAny,
     }}>
       {children}
     </AuthContext.Provider>
