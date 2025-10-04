@@ -123,7 +123,7 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="homepage">
-      {/* Hero Section with Image Accordion */}
+      
       <section className="hero-section">
         <div className="accordion-wrapper">
           <div className="image-accordion">
@@ -161,7 +161,7 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* Scrolling brand marquee */}
+      
       <section className="brand-marquee">
         <div className="marquee-track">
           {[...brandLogos, ...brandLogos].map((src, i) => (
@@ -172,7 +172,7 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* Catalogues CTA Section */}
+      
       <section className="catalogues-cta">
         <div className="container">
           <motion.div 
@@ -195,7 +195,7 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* Featured Brands Grid */
+      
       <section className="brands-section">
         <div className="container">
           <div className="section-header">
@@ -220,7 +220,7 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* Past Events: Event card + photo stack */}
+      
       <section className="events-section">
         <div className="container">
           <div className="section-header">
@@ -252,7 +252,7 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* Brand Modal */}
+      
       <AnimatePresence>
         {selectedBrand && (
           <BrandModal
