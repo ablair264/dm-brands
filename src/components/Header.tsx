@@ -2,18 +2,21 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { User, Menu, X } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 import './Header.css';
 
 const Header: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const { user, isAdmin } = useAuth();
 
   const navItems = [
     { path: '/', label: 'Home' },
     { path: '/events', label: 'Events' },
     { path: '/about', label: 'About' },
     { path: '/catalogues', label: 'Catalogues' },
-    { path: '/image-bank-auth', label: 'Image Bank' },
+    // If a customer is logged in, send them straight to the image bank
+    { path: user && !isAdmin ? '/image-bank' : '/image-bank-auth', label: 'Image Bank' },
   ];
 
   const isActive = (path: string) => location.pathname === path;

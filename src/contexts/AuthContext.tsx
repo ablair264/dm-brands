@@ -100,11 +100,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           });
 
           if (!error && data.user) {
-            setUser({
+            const userData = {
               email: data.user.email || '',
-              id: data.user.id
-            });
+              id: data.user.id,
+              isAdmin: true,
+            };
+            setUser(userData);
             setIsAdmin(true);
+            // Persist admin session hint so refresh keeps admin role even if Supabase check lags
+            localStorage.setItem('dm-brands-auth', JSON.stringify({
+              user: userData,
+              timestamp: Date.now(),
+            }));
             return { error: null };
           }
 
@@ -119,7 +126,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // Fallback to simple authentication
       if (email === DEFAULT_ADMIN_EMAIL && password === DEFAULT_ADMIN_PASSWORD) {
-        const userData = { email };
+        const userData = { email, isAdmin: true };
         setUser(userData);
         setIsAdmin(true);
         
