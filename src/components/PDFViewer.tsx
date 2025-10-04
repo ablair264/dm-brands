@@ -11,23 +11,32 @@ interface PDFViewerProps {
 const PDFViewer: React.FC<PDFViewerProps> = ({ pdfUrl, title, onClose }) => {
   // Try to use the advanced PDF viewer if available, otherwise fallback to iframe
   const [useAdvancedViewer, setUseAdvancedViewer] = React.useState(false);
+  const [pdfComponents, setPdfComponents] = React.useState<any>(null);
   
   React.useEffect(() => {
     // Check if advanced PDF viewer packages are installed
     try {
-      require('@react-pdf-viewer/core');
+      const coreModule = require('@react-pdf-viewer/core');
+      const defaultLayoutModule = require('@react-pdf-viewer/default-layout');
+      require('@react-pdf-viewer/core/lib/styles/index.css');
+      require('@react-pdf-viewer/default-layout/lib/styles/index.css');
+      
+      setPdfComponents({
+        Worker: coreModule.Worker,
+        Viewer: coreModule.Viewer,
+        SpecialZoomLevel: coreModule.SpecialZoomLevel,
+        defaultLayoutPlugin: defaultLayoutModule.defaultLayoutPlugin
+      });
       setUseAdvancedViewer(true);
     } catch {
       setUseAdvancedViewer(false);
+      setPdfComponents(null);
     }
   }, []);
 
-  if (useAdvancedViewer) {
+  if (useAdvancedViewer && pdfComponents) {
     try {
-      const { Worker, Viewer, SpecialZoomLevel } = require('@react-pdf-viewer/core');
-      const { defaultLayoutPlugin } = require('@react-pdf-viewer/default-layout');
-      require('@react-pdf-viewer/core/lib/styles/index.css');
-      require('@react-pdf-viewer/default-layout/lib/styles/index.css');
+      const { Worker, Viewer, SpecialZoomLevel, defaultLayoutPlugin } = pdfComponents;
       
       const defaultLayoutPluginInstance = defaultLayoutPlugin({
         sidebarTabs: (defaultTabs: any[]) => [

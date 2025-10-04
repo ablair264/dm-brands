@@ -10,6 +10,8 @@ import AboutPage from './pages/AboutPage';
 import CataloguesPage from './pages/CataloguesPage';
 import LoginPage from './pages/LoginPage';
 import AdminDashboard from './admin/AdminDashboard';
+import ImageBankAuthPage from './pages/ImageBankAuthPage';
+import CustomerImageBank from './pages/CustomerImageBank';
 import './styles/globals.css';
 
 function App() {
@@ -20,6 +22,12 @@ function App() {
           <Routes>
             {/* Login route without header */}
             <Route path="/login" element={<LoginPage />} />
+            
+            {/* Image Bank Auth route without header */}
+            <Route path="/image-bank-auth" element={<ImageBankAuthPage />} />
+            
+            {/* Protected Image Bank route without header */}
+            <Route path="/image-bank" element={<CustomerImageBank />} />
             
             {/* Admin route with authentication */}
             <Route

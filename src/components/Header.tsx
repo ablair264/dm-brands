@@ -13,6 +13,7 @@ const Header: React.FC = () => {
     { path: '/events', label: 'Events' },
     { path: '/about', label: 'About' },
     { path: '/catalogues', label: 'Catalogues' },
+    { path: '/image-bank-auth', label: 'Image Bank' },
   ];
 
   const isActive = (path: string) => location.pathname === path;

@@ -9,6 +9,7 @@ interface Catalogue {
   id: string;
   brand_id?: string;
   brand?: any;
+  title?: string;
   year: string;
   season?: string;
   pdf_url?: string;
@@ -25,7 +26,15 @@ const CataloguesPage: React.FC = () => {
 
   useEffect(() => {
     loadCatalogues();
-  }, [loadCatalogues]);
+    
+    // Reload catalogues when window gains focus (helps when switching from admin tab)
+    const handleFocus = () => {
+      loadCatalogues();
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, []);
 
   const loadCatalogues = async () => {
     try {
@@ -56,7 +65,14 @@ const CataloguesPage: React.FC = () => {
 
   const handleViewPDF = (catalogue: Catalogue) => {
     const brandName = catalogue.brand?.name || 'Catalogue';
-    const title = `${brandName} - ${catalogue.year} ${catalogue.season || ''}`.trim();
+    let title;
+    
+    if (catalogue.title) {
+      title = `${brandName} - ${catalogue.title}`;
+    } else {
+      title = `${brandName} - ${catalogue.year} ${catalogue.season || ''}`.trim();
+    }
+    
     setSelectedPDF({
       url: catalogue.pdf_url || '',
       title
@@ -139,13 +155,13 @@ const CataloguesPage: React.FC = () => {
                 } as React.CSSProperties}
               >
                 <div className="book-spine">
-                  <div className="book-year">{catalogue.year}</div>
+                  {catalogue.title ? (
+                    <div className="book-title">{catalogue.title}</div>
+                  ) : (
+                    <div className="book-year">{catalogue.year}</div>
+                  )}
                   {catalogue.brand && (
-                    <img
-                      src={catalogue.brand.logo || catalogue.brand.logo_url}
-                      alt={`${catalogue.brand.name} logo`}
-                      className="logo"
-                    />
+                    <div className="brand-name">{catalogue.brand.name}</div>
                   )}
                 </div>
                 
@@ -190,13 +206,13 @@ const CataloguesPage: React.FC = () => {
                   } as React.CSSProperties}
                 >
                   <div className="book-spine">
-                    <div className="book-year">{catalogue.year}</div>
+                    {catalogue.title ? (
+                      <div className="book-title">{catalogue.title}</div>
+                    ) : (
+                      <div className="book-year">{catalogue.year}</div>
+                    )}
                     {catalogue.brand && (
-                      <img
-                        src={catalogue.brand.logo || catalogue.brand.logo_url}
-                        alt={`${catalogue.brand.name} logo`}
-                        className="logo"
-                      />
+                      <div className="brand-name">{catalogue.brand.name}</div>
                     )}
                   </div>
                   

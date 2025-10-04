@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Users, Package, FileText, Plus, Edit2, Trash2, Save, X, LogOut } from 'lucide-react';
+import { Calendar, Users, Package, FileText, Plus, Edit2, Trash2, Save, X, LogOut, Image } from 'lucide-react';
 import { eventService, brandService, catalogueService } from '../services/database';
 import { useAuth } from '../contexts/AuthContext';
+import { customerAuthService, CustomerUser } from '../services/customerAuthService';
 import './AdminDashboard.css';
 
 interface Event {
@@ -29,6 +30,7 @@ interface Catalogue {
   id: string;
   brand_id: string;
   brand?: Brand;
+  title?: string;
   year: string;
   season?: string;
   pdf_url?: string;
@@ -36,11 +38,15 @@ interface Catalogue {
   order_index?: number;
 }
 
+// Use CustomerUser from service instead
+type Customer = CustomerUser;
+
 const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState('events');
   const [events, setEvents] = useState<Event[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [catalogues, setCatalogues] = useState<Catalogue[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [editingCatalogue, setEditingCatalogue] = useState<Catalogue | null>(null);
   const [isAddingEvent, setIsAddingEvent] = useState(false);
@@ -59,7 +65,7 @@ const AdminDashboard: React.FC = () => {
 
   useEffect(() => {
     loadData();
-  }, [activeTab, loadData]);
+  }, [activeTab]);
 
   const loadData = async () => {
     setLoading(true);
@@ -82,6 +88,8 @@ const AdminDashboard: React.FC = () => {
             setCatalogues(catalogueData);
             const brandData = await brandService.getAll();
             setBrands(brandData);
+          } else if (activeTab === 'customers') {
+            loadCustomers();
           }
         } catch (dbError) {
           console.warn('Database not configured, using static data:', dbError);
@@ -90,6 +98,9 @@ const AdminDashboard: React.FC = () => {
         }
       } else {
         loadStaticData();
+        if (activeTab === 'customers') {
+          loadCustomers();
+        }
       }
     } catch (err) {
       setError('Failed to load data');
@@ -139,6 +150,59 @@ const AdminDashboard: React.FC = () => {
         { id: '3', brand_id: '3', year: '2025', color: '#8E24AA', pdf_url: '/catalogues/PPD/ppd_2025.pdf' },
       ];
       setCatalogues(staticCatalogues);
+    }
+  };
+
+  const loadCustomers = async () => {
+    try {
+      console.log('📋 Loading customer users from Splitfin database...');
+      const customerUsers = await customerAuthService.getAllCustomerUsers();
+      setCustomers(customerUsers);
+      console.log(`✅ Loaded ${customerUsers.length} customer users`);
+    } catch (error) {
+      console.error('❌ Failed to load customer users:', error);
+      setError('Failed to load customer users');
+    }
+  };
+
+  const handleCustomerStatusChange = async (customerId: string, newStatus: 'approved' | 'rejected' | 'disabled') => {
+    try {
+      console.log(`🔄 Updating customer ${customerId} status to ${newStatus}`);
+      
+      const isActive = newStatus === 'approved';
+      const result = await customerAuthService.updateCustomerUserStatus(customerId, isActive);
+      
+      if (result.success) {
+        // Reload customer list to get updated data
+        await loadCustomers();
+        console.log(`✅ Customer status updated to ${newStatus}`);
+      } else {
+        setError(result.error || 'Failed to update customer status');
+      }
+    } catch (error) {
+      console.error('❌ Failed to update customer status:', error);
+      setError('Failed to update customer status');
+    }
+  };
+
+  const handleDeleteCustomer = async (customerId: string) => {
+    if (window.confirm('Are you sure you want to delete this customer? This action cannot be undone.')) {
+      try {
+        console.log(`🗑️ Deleting customer ${customerId}`);
+        
+        const result = await customerAuthService.deleteCustomerUser(customerId);
+        
+        if (result.success) {
+          // Reload customer list to get updated data
+          await loadCustomers();
+          console.log('✅ Customer deleted successfully');
+        } else {
+          setError(result.error || 'Failed to delete customer');
+        }
+      } catch (error) {
+        console.error('❌ Failed to delete customer:', error);
+        setError('Failed to delete customer');
+      }
     }
   };
 
@@ -219,6 +283,7 @@ const AdminDashboard: React.FC = () => {
 
       const catalogueData = {
         brand_id: catalogue.brand_id,
+        title: catalogue.title,
         year: catalogue.year,
         season: catalogue.season,
         pdf_url: pdfUrl,
@@ -429,6 +494,7 @@ const AdminDashboard: React.FC = () => {
       catalogue || {
         id: '',
         brand_id: brands[0]?.id || '',
+        title: '',
         year: new Date().getFullYear().toString(),
         season: '',
         pdf_url: '',
@@ -464,6 +530,16 @@ const AdminDashboard: React.FC = () => {
                 <option key={brand.id} value={brand.id}>{brand.name}</option>
               ))}
             </select>
+          </div>
+
+          <div className="form-group">
+            <label>Title (Optional)</label>
+            <input
+              type="text"
+              value={formData.title || ''}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              placeholder="e.g., Spring Collection, Product Catalog"
+            />
           </div>
 
           <div className="form-group">
@@ -576,6 +652,14 @@ const AdminDashboard: React.FC = () => {
           )}
         </div>
         <div className="admin-header-actions">
+          <button 
+            className="image-bank-button" 
+            onClick={() => navigate('/image-bank')}
+            title="Access Image Bank"
+          >
+            <Image size={18} />
+            Image Bank
+          </button>
           <div className="user-info">
             <span>Logged in as: {user?.email}</span>
           </div>
@@ -609,11 +693,11 @@ const AdminDashboard: React.FC = () => {
           Catalogues
         </button>
         <button
-          className={`tab ${activeTab === 'users' ? 'active' : ''}`}
-          onClick={() => setActiveTab('users')}
+          className={`tab ${activeTab === 'customers' ? 'active' : ''}`}
+          onClick={() => setActiveTab('customers')}
         >
           <Users size={18} />
-          Users
+          Customers
         </button>
       </div>
 
@@ -803,11 +887,100 @@ const AdminDashboard: React.FC = () => {
           </div>
         )}
 
-        {/* Users Management */}
-        {activeTab === 'users' && (
-          <div className="section-placeholder">
-            <h2>User Management</h2>
-            <p>User management functionality will be implemented here.</p>
+        {/* Customer Management */}
+        {activeTab === 'customers' && !loading && (
+          <div className="customers-management">
+            <div className="section-header">
+              <h2>Customer Management</h2>
+              <div className="customer-stats">
+                <span className="stat">
+                  <strong>{customers.filter(c => !c.is_active).length}</strong> Pending
+                </span>
+                <span className="stat">
+                  <strong>{customers.filter(c => c.is_active).length}</strong> Approved
+                </span>
+                <span className="stat">
+                  <strong>{customers.length}</strong> Total
+                </span>
+              </div>
+            </div>
+
+            <div className="customers-list">
+              {customers.length === 0 ? (
+                <div className="empty-state">
+                  <p>No customer accounts found.</p>
+                  <p>Customers will appear here when they sign up for image bank access.</p>
+                </div>
+              ) : (
+                <div className="customers-table">
+                  <div className="table-header">
+                    <div className="col-name">Customer</div>
+                    <div className="col-company">Company</div>
+                    <div className="col-status">Status</div>
+                    <div className="col-date">Joined</div>
+                    <div className="col-actions">Actions</div>
+                  </div>
+                  
+                  {customers.map(customer => (
+                    <div key={customer.id} className={`customer-row status-${customer.is_active ? 'approved' : 'pending'}`}>
+                      <div className="col-name">
+                        <div className="customer-info">
+                          <strong>{customer.name}</strong>
+                          <span className="email">{customer.email}</span>
+                          {customer.contact_type && (
+                            <span className="contact-type">{customer.contact_type}</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="col-company">
+                        {customer.customer?.trading_name || customer.customer?.display_name || 'Unknown'}
+                      </div>
+                      <div className="col-status">
+                        <span className={`status-badge ${customer.is_active ? 'approved' : 'pending'}`}>
+                          {customer.is_active ? 'Approved' : 'Pending'}
+                        </span>
+                        {customer.master_user && <span className="master-badge">Master</span>}
+                      </div>
+                      <div className="col-date">
+                        {new Date(customer.created_date).toLocaleDateString()}
+                        {customer.last_login && (
+                          <div className="last-login">
+                            Last: {new Date(customer.last_login).toLocaleDateString()}
+                          </div>
+                        )}
+                      </div>
+                      <div className="col-actions">
+                        {!customer.is_active && (
+                          <button
+                            className="btn btn-success btn-sm"
+                            onClick={() => handleCustomerStatusChange(customer.id, 'approved')}
+                            title="Approve"
+                          >
+                            ✓ Approve
+                          </button>
+                        )}
+                        {customer.is_active && (
+                          <button
+                            className="btn btn-warning btn-sm"
+                            onClick={() => handleCustomerStatusChange(customer.id, 'disabled')}
+                            title="Disable"
+                          >
+                            Disable
+                          </button>
+                        )}
+                        <button
+                          className="btn btn-danger btn-sm"
+                          onClick={() => handleDeleteCustomer(customer.id)}
+                          title="Delete"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

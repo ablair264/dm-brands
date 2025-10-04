@@ -196,7 +196,12 @@ export const catalogueService = {
       .order('order_index', { ascending: true });
     
     if (error) throw error;
-    return data;
+    
+    // Normalize the data: map 'brands' to 'brand' for consistency
+    return data?.map(catalogue => ({
+      ...catalogue,
+      brand: catalogue.brands
+    })) || [];
   },
 
   async getByBrand(brandId: string) {

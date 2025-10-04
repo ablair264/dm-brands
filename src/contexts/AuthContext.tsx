@@ -1,9 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { customerAuthService, CustomerUser } from '../services/customerAuthService';
 
 interface User {
   email: string;
   id?: string;
+  displayName?: string;
+  company?: string;
+  isAdmin?: boolean;
+  customerUser?: CustomerUser; // Add full customer user data
 }
 
 interface AuthContextType {
@@ -11,6 +16,9 @@ interface AuthContextType {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
+  login: (email: string, password: string) => Promise<boolean>;
+  signup: (email: string, password: string, displayName: string, company: string) => Promise<{ success: boolean; needsApproval?: boolean }>;
+  logout: () => Promise<void>;
   isAdmin: boolean;
 }
 
@@ -31,27 +39,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const checkUser = async () => {
     try {
-      // Check localStorage first for simple auth
+      // Check localStorage for admin auth
       const storedAuth = localStorage.getItem('dm-brands-auth');
       if (storedAuth) {
         const authData = JSON.parse(storedAuth);
         setUser(authData.user);
-        setIsAdmin(true);
+        setIsAdmin(authData.user.isAdmin || false);
         setLoading(false);
         return;
       }
 
-      // Check Supabase session if available
+      // Check DM Brands Supabase for admin auth
       if (supabase) {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
           setUser({
             email: session.user.email || '',
-            id: session.user.id
+            id: session.user.id,
+            isAdmin: true
           });
           setIsAdmin(true);
+          setLoading(false);
+          return;
         }
       }
+
+      // Check Splitfin Supabase for customer auth
+      const customerUser = await customerAuthService.getCurrentUser();
+      if (customerUser) {
+        const userData = {
+          email: customerUser.email,
+          id: customerUser.id,
+          displayName: customerUser.name,
+          company: customerUser.customer?.trading_name || customerUser.customer?.display_name,
+          isAdmin: false,
+          customerUser: customerUser
+        };
+        
+        setUser(userData);
+        setIsAdmin(false);
+        setLoading(false);
+        return;
+      }
+
     } catch (error) {
       console.error('Error checking auth:', error);
     } finally {
@@ -126,8 +156,85 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Customer authentication methods
+  const login = async (email: string, password: string): Promise<boolean> => {
+    try {
+      console.log('🔐 Customer login attempt:', email);
+      
+      const result = await customerAuthService.signIn(email, password);
+      
+      if (result.success && result.user) {
+        const userData = {
+          email: result.user.email,
+          id: result.user.id,
+          displayName: result.user.name,
+          company: result.user.customer?.trading_name || result.user.customer?.display_name,
+          isAdmin: false,
+          customerUser: result.user
+        };
+        
+        setUser(userData);
+        setIsAdmin(false);
+        
+        console.log('✅ Customer login successful');
+        return true;
+      } else {
+        console.log('❌ Customer login failed:', result.error);
+        throw new Error(result.error || 'Login failed');
+      }
+    } catch (error) {
+      console.error('❌ Login error:', error);
+      throw error;
+    }
+  };
+
+  const signup = async (email: string, password: string, displayName: string, company: string): Promise<{ success: boolean; needsApproval?: boolean }> => {
+    try {
+      console.log('📝 Customer signup attempt:', email);
+      
+      const result = await customerAuthService.signUp({
+        name: displayName,
+        email,
+        company,
+        contactType: 'admin' // Default contact type
+      }, password);
+      
+      if (result.success) {
+        console.log('✅ Customer signup successful');
+        return { success: true, needsApproval: result.needsApproval };
+      } else {
+        console.log('❌ Customer signup failed:', result.error);
+        throw new Error(result.error || 'Signup failed');
+      }
+    } catch (error) {
+      console.error('❌ Signup error:', error);
+      throw error;
+    }
+  };
+
+  const logout = async () => {
+    try {
+      console.log('🚪 Customer logout');
+      await customerAuthService.signOut();
+      setUser(null);
+      setIsAdmin(false);
+      console.log('✅ Customer logout successful');
+    } catch (error) {
+      console.error('❌ Logout error:', error);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signOut, isAdmin }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      loading, 
+      signIn, 
+      signOut, 
+      login, 
+      signup, 
+      logout, 
+      isAdmin 
+    }}>
       {children}
     </AuthContext.Provider>
   );
