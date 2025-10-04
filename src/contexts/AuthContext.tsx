@@ -53,17 +53,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      // Check DM Brands Supabase for admin auth
+      // Check Splitfin Supabase session (single auth source)
       if (supabase) {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
-          setUser({
-            email: session.user.email || '',
-            id: session.user.id,
-            isAdmin: true
-          });
-          setIsAdmin(true);
-          setRole('admin');
+          // Determine app role from Splitfin users table
+          try {
+            const { data, error } = await supabase
+              .from('users')
+              .select('role')
+              .eq('auth_user_id', session.user.id)
+              .maybeSingle();
+            const roleName = (!error && data?.role) ? String(data.role) : null;
+            const adminLike = roleName === 'Admin' || roleName === 'Manager';
+            setUser({ email: session.user.email || '', id: session.user.id, isAdmin: adminLike });
+            setIsAdmin(adminLike);
+            setRole(adminLike ? 'admin' : 'customer');
+          } catch {
+            setUser({ email: session.user.email || '', id: session.user.id, isAdmin: false });
+            setIsAdmin(false);
+            setRole('customer');
+          }
           setLoading(false);
           return;
         }
@@ -106,20 +116,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           });
 
           if (!error && data.user) {
-            const userData = {
-              email: data.user.email || '',
-              id: data.user.id,
-              isAdmin: true,
-            };
-            setUser(userData);
-            setIsAdmin(true);
-            setRole('admin');
-            // Persist admin session hint so refresh keeps admin role even if Supabase check lags
-            localStorage.setItem('dm-brands-auth', JSON.stringify({
-              user: userData,
-              timestamp: Date.now(),
-            }));
-            return { error: null };
+            // Look up role in Splitfin users table
+            try {
+              const { data: roleRow } = await supabase
+                .from('users')
+                .select('role')
+                .eq('auth_user_id', data.user.id)
+                .maybeSingle();
+              const roleName = roleRow?.role ? String(roleRow.role) : null;
+              const adminLike = roleName === 'Admin' || roleName === 'Manager';
+              const userData = { email: data.user.email || '', id: data.user.id, isAdmin: adminLike };
+              setUser(userData);
+              setIsAdmin(adminLike);
+              setRole(adminLike ? 'admin' : 'customer');
+              localStorage.setItem('dm-brands-auth', JSON.stringify({ user: userData, timestamp: Date.now() }));
+              return { error: null };
+            } catch {
+              const userData = { email: data.user.email || '', id: data.user.id, isAdmin: false };
+              setUser(userData);
+              setIsAdmin(false);
+              setRole('customer');
+              localStorage.setItem('dm-brands-auth', JSON.stringify({ user: userData, timestamp: Date.now() }));
+              return { error: null };
+            }
           }
 
           if (error && error.message !== 'Invalid login credentials') {
@@ -131,21 +150,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
 
-      // Fallback to simple authentication
-      if (email === DEFAULT_ADMIN_EMAIL && password === DEFAULT_ADMIN_PASSWORD) {
-        const userData = { email, isAdmin: true };
-        setUser(userData);
-        setIsAdmin(true);
-        setRole('admin');
-        
-        // Store in localStorage
-        localStorage.setItem('dm-brands-auth', JSON.stringify({
-          user: userData,
-          timestamp: Date.now()
-        }));
-        
-        return { error: null };
-      }
+      // No fallback credentials — Splitfin Auth only
 
       return { error: 'Invalid email or password' };
     } catch (error) {
