@@ -368,7 +368,7 @@ const AdminDashboard: React.FC = () => {
   };
 
   // Event Form Component
-  const EventForm: React.FC<{ event: Event | null; onSave: (event: Event) => void; onCancel: () => void }> = ({ event, onSave, onCancel }) => {
+  const EventForm: React.FC<{ event: Event | null; onSave: (event: Event) => void; onCancel: () => void; onManageMedia?: (eventId: string) => void }> = ({ event, onSave, onCancel, onManageMedia }) => {
     const [formData, setFormData] = useState<Event>(
       event || {
         id: '',
@@ -510,6 +510,11 @@ const AdminDashboard: React.FC = () => {
             <X size={16} />
             Cancel
           </button>
+          {event?.id && onManageMedia && (
+            <button type="button" className="btn" onClick={() => onManageMedia(event.id)}>
+              <Image size={16} /> Manage Media
+            </button>
+          )}
         </div>
       </form>
     );
@@ -780,6 +785,10 @@ const AdminDashboard: React.FC = () => {
                   event={editingEvent}
                   onSave={handleSaveEvent}
                   onCancel={() => setEditingEvent(null)}
+                  onManageMedia={(id: string) => {
+                    const ev = events.find(e => e.id === id) || editingEvent;
+                    setManagingMediaFor(ev);
+                  }}
                 />
               </div>
             )}

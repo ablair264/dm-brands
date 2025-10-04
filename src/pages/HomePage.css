@@ -166,17 +166,7 @@
   color: white;
 }
 
-/* Brand marquee */
-.brand-marquee { padding: var(--spacing-xl) 0; background: #fff; overflow: hidden; }
-.brand-marquee .marquee-track {
-  display: flex;
-  gap: 40px;
-  animation: marquee 28s linear infinite;
-  will-change: transform;
-}
-.brand-marquee .marquee-item { flex: 0 0 auto; display: grid; place-items: center; opacity: 0.8; }
-.brand-marquee img { height: 40px; width: auto; object-fit: contain; filter: grayscale(100%); opacity: 0.85; }
-@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+/* Removed marquee per feedback */
 
 /* Sections */
 .brands-section, .events-section {
@@ -214,6 +204,10 @@
   box-shadow: var(--shadow-md);
   background: #faf9fb;
   border: 1px solid rgba(0,0,0,0.04);
+}
+
+.brand-card:hover {
+  box-shadow: 0 14px 30px rgba(0,0,0,0.12);
 }
 
 .brand-media {

@@ -81,15 +81,7 @@ const HomePage: React.FC = () => {
     }
   ];
 
-  const brandLogos: string[] = [
-    '/images/brands/elvang-logo.svg',
-    '/images/brands/gefu-logo.svg',
-    '/images/brands/ppd-logo.svg',
-    '/images/brands/myflame-logo.svg',
-    '/images/brands/relaxound-logo.svg',
-    '/images/brands/rader-logo.svg',
-    '/images/brands/remember-logo.svg',
-  ];
+  // brand logos marquee removed as requested
 
   // Recent event gallery (drop images into public/images/events/three-counties-autumn-2025)
   const [dynamicEventImages, setDynamicEventImages] = useState<string[] | null>(null);
@@ -162,15 +154,7 @@ const HomePage: React.FC = () => {
       </section>
 
       
-      <section className="brand-marquee">
-        <div className="marquee-track">
-          {[...brandLogos, ...brandLogos].map((src, i) => (
-            <div className="marquee-item" key={`${src}-${i}`}>
-              <img src={src} alt="brand" />
-            </div>
-          ))}
-        </div>
-      </section>
+      
 
       
       <section className="catalogues-cta">
@@ -203,8 +187,17 @@ const HomePage: React.FC = () => {
             <p>Design-led collections across home, kitchen, gifts and wellbeing</p>
           </div>
           <div className="brands-grid">
-            {brands.map((brand) => (
-              <div key={brand.id} className="brand-card" style={{ ['--brand-color' as any]: brand.color }}>
+            {brands.map((brand, i) => (
+              <motion.div
+                key={brand.id}
+                className="brand-card"
+                style={{ ['--brand-color' as any]: brand.color }}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ duration: 0.45, delay: i * 0.08 }}
+                whileHover={{ y: -6, scale: 1.01 }}
+              >
                 <div className="brand-media" style={{ backgroundImage: `url(${brand.image})` }} />
                 <div className="brand-info">
                   <h3>{brand.name}</h3>
@@ -214,7 +207,7 @@ const HomePage: React.FC = () => {
                     <a className="btn-link" href={brand.website} target="_blank" rel="noreferrer">Website →</a>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>

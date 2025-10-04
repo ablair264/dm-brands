@@ -42,9 +42,10 @@ const PhotoStack: React.FC<PhotoStackProps> = ({ images, height = 420 }) => {
           onClick={next}
         />
       ))}
+      {/* Preload next image to avoid flicker */}
+      <img src={images[(index + 4) % images.length]} alt="" style={{ display: 'none' }} />
     </div>
   );
 };
 
 export default PhotoStack;
-
