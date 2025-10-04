@@ -1,0 +1,284 @@
+/* src/pages/HomePage.css */
+
+.homepage {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Hero Section */
+.hero-section {
+  padding: 20px 0 40px 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: auto;
+}
+
+.hero-header {
+  text-align: center;
+  margin-bottom: var(--spacing-3xl);
+}
+
+.hero-title {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--accent-2);
+  margin-bottom: var(--spacing-md);
+}
+
+.hero-subtitle {
+  font-size: 1.25rem;
+  color: var(--primary-color);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Image Accordion */
+.accordion-wrapper {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-lg);
+}
+
+.image-accordion {
+  display: flex;
+  height: 450px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  width: 100%;
+}
+
+.accordion-item {
+  flex: 1;
+  position: relative;
+  cursor: pointer;
+  transition: flex 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  overflow: hidden;
+  min-width: 80px;
+}
+
+.accordion-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: inherit;
+  filter: brightness(0.7);
+  transition: filter 0.3s ease;
+}
+
+.accordion-item.active {
+  flex: 3;
+}
+
+.accordion-item.active::before {
+  filter: brightness(1);
+}
+
+.accordion-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: var(--spacing-xl);
+  background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
+  z-index: 2;
+}
+
+.brand-name {
+  color: var(--text-light);
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  transition: transform 0.3s ease;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+.accordion-item.active .brand-name {
+  transform: translateY(-10px);
+  font-size: 2rem;
+}
+
+.brand-preview {
+  margin-top: var(--spacing-md);
+}
+
+.brand-tagline {
+  color: var(--text-light);
+  font-size: 1rem;
+  opacity: 0.9;
+}
+
+/* Catalogues CTA Section */
+.catalogues-cta {
+  padding: var(--spacing-3xl) 0;
+  background-color: rgba(255, 255, 255, 0.95);
+}
+
+.cta-content {
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.cta-content h2 {
+  font-size: 2.5rem;
+  color: var(--accent-2);
+  margin-bottom: var(--spacing-lg);
+}
+
+.cta-content p {
+  font-size: 1.125rem;
+  color: var(--primary-color);
+  margin-bottom: var(--spacing-2xl);
+  line-height: 1.8;
+}
+
+.cta-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-2xl);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-1) 100%);
+  color: white;
+  border-radius: var(--radius-full);
+  font-size: 1.125rem;
+  font-weight: 600;
+  transition: all var(--transition-base);
+  box-shadow: 0 4px 15px rgba(145, 134, 142, 0.3);
+}
+
+.cta-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(145, 134, 142, 0.4);
+}
+
+.cta-button span {
+  color: white;
+}
+
+/* Mobile Styles */
+@media (max-width: 1024px) {
+  .image-accordion {
+    height: 350px;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 2rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+    padding: 0 var(--spacing-lg);
+  }
+
+  .accordion-wrapper {
+    padding: 0;
+  }
+
+  .image-accordion {
+    flex-direction: column;
+    height: auto;
+    border-radius: 0;
+  }
+
+  .accordion-item {
+    height: 120px;
+    flex: 1 !important;
+  }
+
+  .accordion-item.active {
+    height: 200px;
+  }
+
+  .brand-name {
+    font-size: 1.25rem;
+  }
+
+  .accordion-item.active .brand-name {
+    font-size: 1.5rem;
+  }
+
+  .accordion-content {
+    padding: var(--spacing-lg);
+  }
+
+  .cta-content h2 {
+    font-size: 1.75rem;
+  }
+
+  .cta-content p {
+    font-size: 1rem;
+    padding: 0 var(--spacing-lg);
+  }
+
+  .cta-button {
+    font-size: 1rem;
+    padding: var(--spacing-md) var(--spacing-xl);
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-section {
+    padding: var(--spacing-xl) 0;
+  }
+
+  .hero-header {
+    margin-bottom: var(--spacing-2xl);
+  }
+
+  .hero-title {
+    font-size: 1.75rem;
+  }
+
+  .accordion-item {
+    height: 100px;
+  }
+
+  .accordion-item.active {
+    height: 150px;
+  }
+
+  .brand-name {
+    font-size: 1rem;
+    letter-spacing: 1px;
+  }
+
+  .catalogues-cta {
+    padding: var(--spacing-2xl) 0;
+  }
+}
+
+/* Animations */
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
