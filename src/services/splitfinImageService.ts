@@ -32,7 +32,7 @@ class SplitfinImageService {
       console.log('🔗 Testing Splitfin Supabase connection...');
       
       // Simple test query to check connection
-      const { data, error } = await splitfinCustomerSupabase
+      const { error } = await splitfinCustomerSupabase
         .from('brands')
         .select('count')
         .limit(1);

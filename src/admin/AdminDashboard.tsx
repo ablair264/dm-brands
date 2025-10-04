@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Users, Package, FileText, Plus, Edit2, Trash2, Save, X, LogOut, Image } from 'lucide-react';
 import { eventService, brandService, catalogueService } from '../services/database';
@@ -63,54 +63,7 @@ const AdminDashboard: React.FC = () => {
     navigate('/login');
   };
 
-  useEffect(() => {
-    loadData();
-  }, [activeTab]);
-
-  const loadData = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      if (useDatabase) {
-        try {
-          if (activeTab === 'events') {
-            const data = await eventService.getAll();
-            setEvents(data.map((event: any) => ({
-              ...event,
-              brands: event.event_brands?.map((eb: any) => eb.brand_id) || []
-            })));
-          } else if (activeTab === 'brands') {
-            const data = await brandService.getAll();
-            setBrands(data);
-          } else if (activeTab === 'catalogues') {
-            const catalogueData = await catalogueService.getAll();
-            setCatalogues(catalogueData);
-            const brandData = await brandService.getAll();
-            setBrands(brandData);
-          } else if (activeTab === 'customers') {
-            loadCustomers();
-          }
-        } catch (dbError) {
-          console.warn('Database not configured, using static data:', dbError);
-          setUseDatabase(false);
-          loadStaticData();
-        }
-      } else {
-        loadStaticData();
-        if (activeTab === 'customers') {
-          loadCustomers();
-        }
-      }
-    } catch (err) {
-      setError('Failed to load data');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadStaticData = () => {
+  const loadStaticData = useCallback(() => {
     // Static fallback data
     const staticBrands: Brand[] = [
       { id: '1', name: 'Elvang', logo_url: '/images/brands/elvang-logo.svg' },
@@ -151,7 +104,80 @@ const AdminDashboard: React.FC = () => {
       ];
       setCatalogues(staticCatalogues);
     }
-  };
+  }, [activeTab, events.length]);
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      if (useDatabase) {
+        try {
+          if (activeTab === 'events') {
+            const data = await eventService.getAll();
+            setEvents(data.map((event: any) => ({
+              ...event,
+              brands: event.event_brands?.map((eb: any) => eb.brand_id) || []
+            })));
+          } else if (activeTab === 'brands') {
+            const data = await brandService.getAll();
+            setBrands(data);
+          } else if (activeTab === 'catalogues') {
+            const catalogueData = await catalogueService.getAll();
+            setCatalogues(catalogueData);
+            const brandData = await brandService.getAll();
+            setBrands(brandData);
+          } else if (activeTab === 'customers') {
+            // Inline customer load to avoid extra hook deps
+            try {
+              console.log('📋 Loading customer users from Splitfin database...');
+              const customerUsers = await customerAuthService.getAllCustomerUsers();
+              setCustomers(customerUsers);
+              console.log(`✅ Loaded ${customerUsers.length} customer users`);
+            } catch (error) {
+              console.error('❌ Failed to load customer users:', error);
+              setError('Failed to load customer users');
+            }
+          }
+        } catch (dbError) {
+          console.warn('Database not configured, using static data:', dbError);
+          setUseDatabase(false);
+          loadStaticData();
+          if (activeTab === 'customers') {
+            try {
+              const customerUsers = await customerAuthService.getAllCustomerUsers();
+              setCustomers(customerUsers);
+            } catch (error) {
+              console.error('❌ Failed to load customer users:', error);
+              setError('Failed to load customer users');
+            }
+          }
+        }
+      } else {
+        loadStaticData();
+        if (activeTab === 'customers') {
+          try {
+            const customerUsers = await customerAuthService.getAllCustomerUsers();
+            setCustomers(customerUsers);
+          } catch (error) {
+            console.error('❌ Failed to load customer users:', error);
+            setError('Failed to load customer users');
+          }
+        }
+      }
+    } catch (err) {
+      setError('Failed to load data');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, [activeTab, useDatabase, loadStaticData]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  
 
   const loadCustomers = async () => {
     try {

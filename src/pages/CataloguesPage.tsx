@@ -1,5 +1,5 @@
 // src/pages/CataloguesPage.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Eye, Download } from 'lucide-react';
 import PDFViewer from '../components/PDFViewer';
 import { catalogueService } from '../services/database';
@@ -24,19 +24,7 @@ const CataloguesPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [useDatabase, setUseDatabase] = useState(true);
 
-  useEffect(() => {
-    loadCatalogues();
-    
-    // Reload catalogues when window gains focus (helps when switching from admin tab)
-    const handleFocus = () => {
-      loadCatalogues();
-    };
-    
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
-  }, []);
-
-  const loadCatalogues = async () => {
+  const loadCatalogues = useCallback(async () => {
     try {
       // Try to load from database first
       if (useDatabase) {
@@ -61,7 +49,19 @@ const CataloguesPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [useDatabase]);
+
+  useEffect(() => {
+    loadCatalogues();
+    
+    // Reload catalogues when window gains focus (helps when switching from admin tab)
+    const handleFocus = () => {
+      loadCatalogues();
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [loadCatalogues]);
 
   const handleViewPDF = (catalogue: Catalogue) => {
     const brandName = catalogue.brand?.name || 'Catalogue';

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Download, Eye, Filter, Grid, List, LogOut, User } from 'lucide-react';
+import { Search, Download, Grid, List, LogOut, User } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { splitfinImageService } from '../services/splitfinImageService';
 import { ImageItem, SplitfinBrand, ImageBankFilters } from '../types/imageBank';
