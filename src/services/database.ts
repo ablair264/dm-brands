@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import type { Brand, Event, Catalogue, EventBrand } from '../lib/supabase';
+import type { Brand, Event, Catalogue } from '../lib/supabase';
 
 // Check if Supabase is configured
 const checkSupabase = () => {
@@ -248,7 +248,7 @@ export const catalogueService = {
 
   async uploadPDF(file: File, path: string) {
     const client = checkSupabase();
-    const { data, error } = await client.storage
+    const { error } = await client.storage
       .from('catalogues')
       .upload(path, file, {
         cacheControl: '3600',

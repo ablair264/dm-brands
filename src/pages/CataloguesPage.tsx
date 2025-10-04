@@ -25,7 +25,7 @@ const CataloguesPage: React.FC = () => {
 
   useEffect(() => {
     loadCatalogues();
-  }, []);
+  }, [loadCatalogues]);
 
   const loadCatalogues = async () => {
     try {

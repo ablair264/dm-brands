@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Users, Package, FileText, Plus, Edit2, Trash2, Save, X, Upload, LogOut } from 'lucide-react';
+import { Calendar, Users, Package, FileText, Plus, Edit2, Trash2, Save, X, LogOut } from 'lucide-react';
 import { eventService, brandService, catalogueService } from '../services/database';
 import { useAuth } from '../contexts/AuthContext';
 import './AdminDashboard.css';
@@ -59,7 +59,7 @@ const AdminDashboard: React.FC = () => {
 
   useEffect(() => {
     loadData();
-  }, [activeTab]);
+  }, [activeTab, loadData]);
 
   const loadData = async () => {
     setLoading(true);

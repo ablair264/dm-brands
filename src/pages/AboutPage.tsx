@@ -1,5 +1,5 @@
 import React from 'react';
-import { Phone, Mail, MapPin, Globe, Building } from 'lucide-react';
+import { Phone, Mail, Globe, Building } from 'lucide-react';
 import './AboutPage.css';
 
 const AboutPage: React.FC = () => {
