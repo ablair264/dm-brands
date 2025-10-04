@@ -5,9 +5,10 @@ import { useAuth } from '../contexts/AuthContext';
 interface PrivateRouteProps {
   children: React.ReactNode;
   requireRole?: 'admin' | 'customer';
+  allowedRoles?: Array<'admin' | 'customer'>;
 }
 
-const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, requireRole }) => {
+const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, requireRole, allowedRoles }) => {
   const { user, isAdmin, role, loading } = useAuth();
   const location = useLocation();
 
@@ -22,8 +23,13 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, requireRole }) =>
 
   // Role-based checks
   if (!user) return <Navigate to="/login" state={{ from: location }} replace />;
-  if (requireRole === 'admin' && !isAdmin) return <Navigate to="/login" state={{ from: location }} replace />;
-  if (requireRole === 'customer' && role !== 'customer') return <Navigate to="/login" state={{ from: location }} replace />;
+  if (allowedRoles && allowedRoles.length > 0) {
+    const isAllowed = (isAdmin && allowedRoles.includes('admin')) || (role === 'customer' && allowedRoles.includes('customer'));
+    if (!isAllowed) return <Navigate to="/login" state={{ from: location }} replace />;
+  } else if (requireRole) {
+    if (requireRole === 'admin' && !isAdmin) return <Navigate to="/login" state={{ from: location }} replace />;
+    if (requireRole === 'customer' && role !== 'customer') return <Navigate to="/login" state={{ from: location }} replace />;
+  }
 
   return <>{children}</>;
 };

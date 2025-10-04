@@ -25,7 +25,7 @@ const CustomerImageBank: React.FC = () => {
 
   useEffect(() => {
     if (!user) {
-      navigate('/image-bank-auth');
+      navigate('/login');
       return;
     }
     loadData();
@@ -69,7 +69,7 @@ const CustomerImageBank: React.FC = () => {
 
   const handleLogout = async () => {
     await logout();
-    navigate('/image-bank-auth');
+    navigate('/login');
   };
 
   const handleDownload = async (image: ImageItem) => {

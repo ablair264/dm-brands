@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Calendar, Users, Package, FileText, Plus, Edit2, Trash2, Save, X, LogOut, Image } from 'lucide-react';
 import { eventService, brandService, catalogueService } from '../services/database';
 import { useAuth } from '../contexts/AuthContext';
@@ -678,14 +678,14 @@ const AdminDashboard: React.FC = () => {
           )}
         </div>
         <div className="admin-header-actions">
-          <button 
+          <Link 
+            to="/image-bank"
             className="image-bank-button" 
-            onClick={() => navigate('/image-bank')}
             title="Access Image Bank"
           >
             <Image size={18} />
             Image Bank
-          </button>
+          </Link>
           <div className="user-info">
             <span>Logged in as: {user?.email}</span>
           </div>

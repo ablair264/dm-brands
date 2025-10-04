@@ -26,11 +26,11 @@ function App() {
             {/* Back-compat: Image Bank Auth route redirects to /login */}
             <Route path="/image-bank-auth" element={<LoginPage />} />
             
-            {/* Protected Image Bank route without header (customer role) */}
+            {/* Protected Image Bank route without header (admin or customer) */}
             <Route
               path="/image-bank"
               element={
-                <PrivateRoute requireRole="customer">
+                <PrivateRoute allowedRoles={["customer","admin"]}>
                   <CustomerImageBank />
                 </PrivateRoute>
               }
