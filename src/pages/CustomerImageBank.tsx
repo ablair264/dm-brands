@@ -7,7 +7,7 @@ import { ImageItem, SplitfinBrand, ImageBankFilters } from '../types/imageBank';
 import './CustomerImageBank.css';
 
 const CustomerImageBank: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
   
   const [images, setImages] = useState<ImageItem[]>([]);
@@ -23,12 +23,19 @@ const CustomerImageBank: React.FC = () => {
     sortOrder: 'desc'
   });
 
-  useEffect(() => {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const loadOnMount = async () => {
     if (!user) {
       navigate('/login');
       return;
     }
-    loadData();
+    await loadData();
+  };
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    loadOnMount();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, navigate]);
 
   const loadData = async () => {
@@ -38,7 +45,7 @@ const CustomerImageBank: React.FC = () => {
       
       // Test connection first
       console.log('🚀 Starting image bank data load...');
-      const connectionTest = await splitfinImageService.testConnection();
+      const connectionTest = await splitfinImageService.testConnection(isAdmin);
       
       if (!connectionTest.connected) {
         setError(`Connection failed: ${connectionTest.error}`);
@@ -48,8 +55,8 @@ const CustomerImageBank: React.FC = () => {
       
       console.log('🔄 Loading brands and images...');
       const [brandsData, imagesData] = await Promise.all([
-        splitfinImageService.loadBrands(),
-        splitfinImageService.loadImages()
+        splitfinImageService.loadBrands(isAdmin),
+        splitfinImageService.loadImages(undefined, isAdmin)
       ]);
       
       console.log(`📊 Load complete - ${brandsData.length} brands, ${imagesData.length} images`);
@@ -74,7 +81,7 @@ const CustomerImageBank: React.FC = () => {
 
   const handleDownload = async (image: ImageItem) => {
     try {
-      const url = await splitfinImageService.getDownloadUrl(image);
+      const url = await splitfinImageService.getDownloadUrl(image, isAdmin);
       const link = document.createElement('a');
       link.href = url;
       link.download = image.name;

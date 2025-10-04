@@ -27,12 +27,13 @@ const DM_BRANDS_COMPANY_ID = '87dcc6db-2e24-46fb-9a12-7886f690a326';
 
 class SplitfinImageService {
   // Test connection to Splitfin Supabase
-  async testConnection(): Promise<{ connected: boolean; error?: string }> {
+  async testConnection(asAdmin: boolean = false): Promise<{ connected: boolean; error?: string }> {
     try {
       console.log('🔗 Testing Splitfin Supabase connection...');
       
       // Simple test query to check connection
-      const { error } = await splitfinCustomerSupabase
+      const client = asAdmin ? splitfinSupabase : splitfinCustomerSupabase;
+      const { error } = await client
         .from('brands')
         .select('count')
         .limit(1);
@@ -51,14 +52,15 @@ class SplitfinImageService {
   }
 
   // Load brands that belong to DM Brands company
-  async loadBrands(): Promise<SplitfinBrand[]> {
+  async loadBrands(asAdmin: boolean = false): Promise<SplitfinBrand[]> {
     try {
       console.log('🔍 Loading brands from Splitfin...');
       console.log('DM_BRANDS_COMPANY_ID:', DM_BRANDS_COMPANY_ID);
+      const client = asAdmin ? splitfinSupabase : splitfinCustomerSupabase;
       
       // First, let's see ALL brands to debug
       console.log('🔍 First, checking all brands in the database...');
-      const { data: allBrands, error: allBrandsError } = await splitfinCustomerSupabase
+      const { data: allBrands, error: allBrandsError } = await client
         .from('brands')
         .select('id, brand_name, brand_normalized, logo_url, is_active, company_id')
         .limit(10);
@@ -80,7 +82,7 @@ class SplitfinImageService {
       
       // Now try the specific query
       console.log('🎯 Now querying for DM Brands specifically...');
-      const { data: brandsData, error } = await splitfinCustomerSupabase
+      const { data: brandsData, error } = await client
         .from('brands')
         .select('id, brand_name, brand_normalized, logo_url, is_active, company_id')
         .eq('is_active', true)
@@ -102,7 +104,7 @@ class SplitfinImageService {
       // If no DM brands found, let's try without the company_id filter
       if (!brandsData || brandsData.length === 0) {
         console.log('🔍 No DM brands found, trying without company_id filter...');
-        const { data: anyActiveBrands, error: anyError } = await splitfinCustomerSupabase
+        const { data: anyActiveBrands, error: anyError } = await client
           .from('brands')
           .select('id, brand_name, brand_normalized, logo_url, is_active, company_id')
           .eq('is_active', true)
@@ -150,9 +152,10 @@ class SplitfinImageService {
   }
 
   // Load images for specific brand or all DM Brands
-  async loadImages(brandId?: string): Promise<ImageItem[]> {
+  async loadImages(brandId?: string, asAdmin: boolean = false): Promise<ImageItem[]> {
     try {
       console.log('🖼️ Loading images from Splitfin storage...');
+      const client = asAdmin ? splitfinSupabase : splitfinCustomerSupabase;
 
       const brands = await this.loadBrands();
       
@@ -174,7 +177,7 @@ class SplitfinImageService {
           console.log(`🔍 Checking bucket for brand: "${brand.brand_name}"`);
           
           // List files from brand bucket
-          const { data: files, error: filesError } = await splitfinCustomerSupabase.storage
+          const { data: files, error: filesError } = await client.storage
             .from(brand.brand_name)
             .list('', {
               limit: 1000,
@@ -200,7 +203,7 @@ class SplitfinImageService {
             console.log(`🖼️ Found ${imageFiles.length} image files in ${brand.brand_name}`);
             
             const brandImages = imageFiles.map((file: any) => {
-              const { data } = splitfinCustomerSupabase.storage
+              const { data } = client.storage
                 .from(brand.brand_name)
                 .getPublicUrl(file.name);
 
@@ -239,9 +242,10 @@ class SplitfinImageService {
   }
 
   // Get download URL for image
-  async getDownloadUrl(image: ImageItem): Promise<string> {
+  async getDownloadUrl(image: ImageItem, asAdmin: boolean = false): Promise<string> {
     try {
-      const { data } = await splitfinCustomerSupabase.storage
+      const client = asAdmin ? splitfinSupabase : splitfinCustomerSupabase;
+      const { data } = await client.storage
         .from(image.actual_bucket_name || image.brand_name)
         .createSignedUrl(image.name, 3600); // 1 hour expiry
 
