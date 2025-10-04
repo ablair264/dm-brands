@@ -4,6 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import BrandModal from '../components/BrandModal';
+import PhotoStack from '../components/PhotoStack';
+import { eventService } from '../services/database';
+import { eventMediaService } from '../services/eventMediaService';
 import './HomePage.css';
 
 interface Brand {
@@ -78,7 +81,19 @@ const HomePage: React.FC = () => {
     }
   ];
 
+  const brandLogos: string[] = [
+    '/images/brands/elvang-logo.svg',
+    '/images/brands/gefu-logo.svg',
+    '/images/brands/ppd-logo.svg',
+    '/images/brands/myflame-logo.svg',
+    '/images/brands/relaxound-logo.svg',
+    '/images/brands/rader-logo.svg',
+    '/images/brands/remember-logo.svg',
+  ];
+
   // Recent event gallery (drop images into public/images/events/three-counties-autumn-2025)
+  const [dynamicEventImages, setDynamicEventImages] = useState<string[] | null>(null);
+  const [dynamicEventLogo, setDynamicEventLogo] = useState<string | null>(null);
   const pastEventImages: string[] = [
     '/images/events/three-counties-autumn-2025/01.jpg',
     '/images/events/three-counties-autumn-2025/02.jpg',
@@ -87,6 +102,24 @@ const HomePage: React.FC = () => {
     '/images/events/three-counties-autumn-2025/05.jpg',
     '/images/events/three-counties-autumn-2025/06.jpg',
   ];
+
+  // Try to load latest event media from Supabase if configured
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const all = await eventService.getAll();
+        if (Array.isArray(all) && all.length > 0) {
+          const sorted = [...all].sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+          const latest = sorted[0];
+          const media = await eventMediaService.listMedia(latest.id);
+          if (media.photoUrls && media.photoUrls.length > 0) setDynamicEventImages(media.photoUrls);
+          if (media.logoUrl) setDynamicEventLogo(media.logoUrl);
+        }
+      } catch (e) {
+        // ignore if supabase not configured
+      }
+    })();
+  }, []);
 
   return (
     <div className="homepage">
@@ -128,6 +161,17 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
+      {/* Scrolling brand marquee */}
+      <section className="brand-marquee">
+        <div className="marquee-track">
+          {[...brandLogos, ...brandLogos].map((src, i) => (
+            <div className="marquee-item" key={`${src}-${i}`}>
+              <img src={src} alt="brand" />
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* Catalogues CTA Section */}
       <section className="catalogues-cta">
         <div className="container">
@@ -151,7 +195,7 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* Featured Brands Grid */}
+      {/* Featured Brands Grid */
       <section className="brands-section">
         <div className="container">
           <div className="section-header">
@@ -176,21 +220,35 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* Past Events Gallery */}
+      {/* Past Events: Event card + photo stack */}
       <section className="events-section">
         <div className="container">
           <div className="section-header">
             <h2>Recent Events</h2>
             <p>3 Counties Autumn Show — highlights from our stand</p>
           </div>
-          <div className="events-grid">
-            {pastEventImages.map((src, i) => (
-              <div key={i} className="event-tile">
-                <div className="event-media" style={{ backgroundImage: `url(${src})` }} />
+
+          <div className="events-split">
+            <div className="event-card glass">
+              <div className="event-logo">
+                <img src={dynamicEventLogo || '/images/events/three-counties-autumn-2025/logo.png'} alt="3 Counties Autumn" onError={(e: any) => { e.currentTarget.style.display = 'none'; }} />
               </div>
-            ))}
+              <div className="event-meta">
+                <h3>3 Counties Autumn Show</h3>
+                <p>Great Malvern • 2025</p>
+                <ul>
+                  <li>Showcasing our autumn/winter ranges</li>
+                  <li>Live demos and product highlights</li>
+                  <li>Thank you to everyone who visited</li>
+                </ul>
+              </div>
+            </div>
+            <div className="event-stack">
+              <PhotoStack images={dynamicEventImages || pastEventImages} />
+            </div>
           </div>
-          <div className="events-note">Have more photos? Drop them into <code>public/images/events/three-counties-autumn-2025</code> using the 01.jpg, 02.jpg pattern.</div>
+
+          <div className="events-note">Have more photos? Drop them into <code>public/images/events/three-counties-autumn-2025</code> using 01.jpg, 02.jpg, …</div>
         </div>
       </section>
 

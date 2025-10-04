@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Calendar, Users, Package, FileText, Plus, Edit2, Trash2, Save, X, LogOut, Image } from 'lucide-react';
 import { eventService, brandService, catalogueService } from '../services/database';
+import { eventMediaService } from '../services/eventMediaService';
 import { useAuth } from '../contexts/AuthContext';
 import { customerAuthService, CustomerUser } from '../services/customerAuthService';
 import './AdminDashboard.css';
@@ -54,6 +55,10 @@ const AdminDashboard: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [useDatabase, setUseDatabase] = useState(true);
+  const [managingMediaFor, setManagingMediaFor] = useState<Event | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [photoFiles, setPhotoFiles] = useState<FileList | null>(null);
+  const [mediaUploading, setMediaUploading] = useState(false);
   
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
@@ -795,6 +800,13 @@ const AdminDashboard: React.FC = () => {
                     <div className="event-actions">
                       <button
                         className="btn btn-icon"
+                        title="Manage event media"
+                        onClick={() => setManagingMediaFor(event)}
+                      >
+                        <Image size={16} />
+                      </button>
+                      <button
+                        className="btn btn-icon"
                         onClick={() => setEditingEvent(event)}
                       >
                         <Edit2 size={16} />
@@ -1010,6 +1022,66 @@ const AdminDashboard: React.FC = () => {
           </div>
         )}
       </div>
+
+      {managingMediaFor && (
+        <div className="media-overlay" onClick={() => setManagingMediaFor(null)}>
+          <div className="media-manager" onClick={(e) => e.stopPropagation()}>
+            <div className="media-header">
+              <h3>Manage Media — {managingMediaFor.name}</h3>
+              <button className="btn btn-icon" onClick={() => setManagingMediaFor(null)}><X size={16} /></button>
+            </div>
+            <div className="media-body">
+              <div className="media-section">
+                <label>Event Logo (PNG recommended)</label>
+                <input type="file" accept="image/*" onChange={(e) => setLogoFile(e.target.files?.[0] || null)} />
+                <button
+                  className="btn btn-primary"
+                  disabled={!logoFile || mediaUploading}
+                  onClick={async () => {
+                    if (!managingMediaFor || !logoFile) return;
+                    try {
+                      setMediaUploading(true);
+                      await eventMediaService.uploadLogo(managingMediaFor.id, logoFile);
+                      alert('Logo uploaded');
+                      setLogoFile(null);
+                    } catch (err) {
+                      console.error(err);
+                      alert('Failed to upload logo');
+                    } finally {
+                      setMediaUploading(false);
+                    }
+                  }}
+                >Upload Logo</button>
+              </div>
+
+              <div className="media-section">
+                <label>Event Photos</label>
+                <input type="file" accept="image/*" multiple onChange={(e) => setPhotoFiles(e.target.files)} />
+                <button
+                  className="btn btn-primary"
+                  disabled={!photoFiles || photoFiles.length === 0 || mediaUploading}
+                  onClick={async () => {
+                    if (!managingMediaFor || !photoFiles) return;
+                    try {
+                      setMediaUploading(true);
+                      await eventMediaService.uploadPhotos(managingMediaFor.id, Array.from(photoFiles));
+                      alert('Photos uploaded');
+                      setPhotoFiles(null);
+                    } catch (err) {
+                      console.error(err);
+                      alert('Failed to upload photos');
+                    } finally {
+                      setMediaUploading(false);
+                    }
+                  }}
+                >Upload Photos</button>
+              </div>
+
+              <p className="media-hint">These files are stored under the <code>events</code> storage bucket. The homepage recent events section pulls the latest event and shows its logo and photos.</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
