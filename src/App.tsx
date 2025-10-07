@@ -10,7 +10,6 @@ import AboutPage from './pages/AboutPage';
 import CataloguesPage from './pages/CataloguesPage';
 import LoginPage from './pages/LoginPage';
 import AdminDashboard from './admin/AdminDashboard';
-import ImageBankAuthPage from './pages/ImageBankAuthPage';
 import CustomerImageBank from './pages/CustomerImageBank';
 import './styles/globals.css';
 

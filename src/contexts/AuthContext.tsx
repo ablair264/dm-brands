@@ -26,9 +26,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Default admin credentials for fallback (change these in production!)
-const DEFAULT_ADMIN_EMAIL = 'admin@dmbrands.co.uk';
-const DEFAULT_ADMIN_PASSWORD = 'DMBrands2025!';
+// Note: Admin fallback credentials removed; app uses Splitfin auth only.
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
