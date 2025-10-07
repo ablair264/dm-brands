@@ -11,6 +11,7 @@ export const splitfinSupabase = createClient(SPLITFIN_SUPABASE_URL, SPLITFIN_SUP
   auth: {
     persistSession: false, // Don't persist auth for this external connection
     autoRefreshToken: false,
+    storageKey: 'splitfin-service-token', // avoid sharing storage key with other clients
   },
 });
 
@@ -19,6 +20,7 @@ export const splitfinCustomerSupabase = createClient(SPLITFIN_SUPABASE_URL, SPLI
   auth: {
     persistSession: true, // Persist customer sessions
     autoRefreshToken: true,
+    storageKey: 'splitfin-customer-token', // separate storage key
   },
 });
 
