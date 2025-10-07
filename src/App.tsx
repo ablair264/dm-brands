@@ -9,7 +9,6 @@ import EventsPage from './pages/EventsPage';
 import AboutPage from './pages/AboutPage';
 import CataloguesPage from './pages/CataloguesPage';
 import LoginPage from './pages/LoginPage';
-import AdminDashboard from './admin/AdminDashboard';
 import CustomerImageBank from './pages/CustomerImageBank';
 import './styles/globals.css';
 
@@ -37,15 +36,6 @@ function App() {
               }
             />
             
-            {/* Admin route with authentication (admin role) */}
-            <Route
-              path="/admin"
-              element={
-                <PrivateRoute requireRole="admin">
-                  <AdminDashboard />
-                </PrivateRoute>
-              }
-            />
             
             {/* Public routes with header */}
             <Route
