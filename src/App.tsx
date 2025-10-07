@@ -24,9 +24,9 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             
             {/* Back-compat: old image bank auth route */}
-            <Route path="/image-bank-auth" element={<ImageBankAuthPage />} />
+            <Route path="/image-bank-auth" element={<LoginPage />} />
             {/* Customer signup route */}
-            <Route path="/signup" element={<ImageBankAuthPage />} />
+            <Route path="/signup" element={<LoginPage />} />
             
             {/* Protected Image Bank route without header (admin or customer) */}
             <Route

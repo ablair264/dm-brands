@@ -169,7 +169,7 @@ class CustomerAuthService {
         is_active: isExistingCustomer
       });
       
-      const { error: customerUserError } = await splitfinCustomerSupabase
+      const { data: createdCustomerUser, error: customerUserError } = await splitfinCustomerSupabase
         .from('customer_users')
         .insert([{
           auth_user_id: authData.user.id,
@@ -183,7 +183,9 @@ class CustomerAuthService {
           master_user: true,
           location_type: 'shipping',
           marketing: false
-        }]);
+        }])
+        .select('id, linked_customer')
+        .single();
 
       if (customerUserError) {
         console.error('❌ Customer user creation error:', customerUserError);
@@ -197,6 +199,17 @@ class CustomerAuthService {
         return { success: true, needsApproval: false };
       } else {
         console.log('⏳ New customer pending approval');
+        // Notify Manager/Admin roles in Splitfin to approve this account
+        try {
+          await this.notifyManagersOfSignup({
+            name: data.name,
+            email: data.email,
+            company: data.company,
+            customerUserId: createdCustomerUser?.id || null,
+          });
+        } catch (notifyErr) {
+          console.warn('⚠️ Failed to notify managers of new signup:', notifyErr);
+        }
         return { success: true, needsApproval: true };
       }
 
@@ -426,6 +439,52 @@ class CustomerAuthService {
     } catch (error) {
       console.error('❌ Delete customer user failed:', error);
       return { success: false, error: 'Failed to delete user' };
+    }
+  }
+
+  /**
+   * Notify Manager/Admin roles in the DM Brands company that a new signup requires approval
+   */
+  private async notifyManagersOfSignup(params: { name: string; email: string; company: string; customerUserId: string | null }) {
+    try {
+      const companyId = this.DM_BRANDS_COMPANY_ID;
+
+      // Lookup internal users (Splitfin users table) with Manager/Admin roles for this company
+      const { data: approvers, error: approversError } = await splitfinSupabase
+        .from('users')
+        .select('id')
+        .eq('company_id', companyId)
+        .in('role', ['Manager', 'Admin']);
+
+      if (approversError) {
+        console.warn('Could not fetch approvers:', approversError.message);
+        return;
+      }
+
+      const rows = (approvers || []).map((u: any) => ({
+        company_id: companyId,
+        user_id: u.id,
+        notification_type: 'user_approval',
+        title: 'New Image Bank Signup',
+        message: `${params.name} (${params.email}) from ${params.company} requested access`,
+        related_entity_type: 'customer_user',
+        related_entity_id: params.customerUserId,
+        action_url: '/user-management/approvals',
+        priority: 'high',
+        read: false,
+      }));
+
+      if (rows.length === 0) return;
+
+      const { error: insertError } = await splitfinSupabase
+        .from('notifications')
+        .insert(rows);
+
+      if (insertError) {
+        console.warn('Failed to insert notifications for approvers:', insertError.message);
+      }
+    } catch (err) {
+      console.warn('notifyManagersOfSignup error:', err);
     }
   }
 }

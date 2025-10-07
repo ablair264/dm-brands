@@ -80,6 +80,29 @@
   font-size: 0.95rem;
 }
 
+.auth-toggle {
+  margin-top: 14px;
+  display: inline-flex;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.toggle-btn {
+  padding: 8px 14px;
+  font-size: 0.9rem;
+  border: none;
+  background: transparent;
+  color: #6c757d;
+  cursor: pointer;
+}
+
+.toggle-btn.active {
+  background: #2c3e50;
+  color: #fff;
+}
+
 .login-form {
   padding: 30px;
 }
